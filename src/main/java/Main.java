@@ -1,14 +1,9 @@
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.io.*;
-import javax.swing.*;
-import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
-import java.*;
+
 
 public class Main {
     public static Output out;

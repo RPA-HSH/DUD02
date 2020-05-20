@@ -13,7 +13,7 @@ public class Output {
         this.ps = ps;
         String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
         try {
-           writer = new FileWriter(dir + "RPI_LOG_" + timeLog + ".txt");
+            writer = new FileWriter(dir + "RPI_LOG_" + timeLog + ".txt");
 
         } catch (IOException e) {
             e.printStackTrace();
@@ -24,13 +24,16 @@ public class Output {
         try {
             ps.println(text);
             //create a temporary file
-            writer.write(text);
-            writer.write(System.getProperty( "line.separator" ));
+            if (output > 0) {
+                writer.write(text);
+                writer.write(System.getProperty("line.separator"));
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }
     }
-    public void stop(){
+
+    public void stop() {
         try {
             writer.close();
         } catch (IOException e) {

@@ -3,6 +3,7 @@
 
 // This application uses the Azure IoT Hub device SDK for Java
 // For samples see: https://github.com/Azure/azure-iot-sdk-java/tree/master/device/iot-device-samples
+
 import com.microsoft.azure.sdk.iot.device.*;
 import com.google.gson.Gson;
 
@@ -20,9 +21,8 @@ public class SimulatedDevice {
     // The device connection string to authenticate the device with your IoT hub.
     // Using the Azure CLI:
     // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyJavaDevice --output table
-    private String connString = "{Your device connection string here}";
+    private String connString;
     private String deviceID;
-    
 
     // Using the MQTT protocol to connect to IoT Hub
     private IotHubClientProtocol protocol = IotHubClientProtocol.MQTT;
@@ -42,8 +42,7 @@ public class SimulatedDevice {
         this.out = out;
     }
 
-
-    public void startSimulation(){
+    public void startSimulation() {
 
         // Connect to the IoT hub.
         try {
@@ -59,7 +58,7 @@ public class SimulatedDevice {
 
     }
 
-    public void stopSimulation(){
+    public void stopSimulation() {
         executor.shutdownNow();
         try {
             client.closeNow();
@@ -87,7 +86,7 @@ public class SimulatedDevice {
     // Print the acknowledgement received from IoT Hub for the telemetry message sent.
     private class EventCallback implements IotHubEventCallback {
         public void execute(IotHubStatusCode status, Object context) {
-            out.print("IoT Hub responded to message with status: " + status.name(), 1);
+            out.print("IoT Hub responded to message with status: " + status.name(), 0);
 
             if (context != null) {
                 synchronized (context) {
@@ -106,13 +105,13 @@ public class SimulatedDevice {
                 Random rand = new Random();
 
                 while (true) {
-                    ZoneId z = ZoneId.of( "Europe/Berlin" );
-                    ZonedDateTime now = ZonedDateTime.now( z );
-                    ZonedDateTime todayStart = now.toLocalDate().atStartOfDay( z );
-                    Duration duration = Duration.between( todayStart , now );
+                    ZoneId z = ZoneId.of("Europe/Berlin");
+                    ZonedDateTime now = ZonedDateTime.now(z);
+                    ZonedDateTime todayStart = now.toLocalDate().atStartOfDay(z);
+                    Duration duration = Duration.between(todayStart, now);
                     double secondsSoFarToday = duration.getSeconds();
                     // Übersetzung in prozentualer Anteil vom Tag
-                    double dayPercentage = secondsSoFarToday/ (60*60*24);
+                    double dayPercentage = secondsSoFarToday / (60 * 60 * 24);
                     // für Sinus-Funktion mal PI nehmen (Annahme = PI = 24 Stunden)
                     double dayPercentagePi = Math.PI * dayPercentage;
                     double sinusFactor = Math.sin(dayPercentagePi);
@@ -121,14 +120,14 @@ public class SimulatedDevice {
                     Random random = new Random();
 
                     // Simulate telemetry.
-                    int randomNoise = random.nextInt( 30) - 15;
-                    double currentTemperature = 20 * sinusFactor + (20 *  randomNoise/ 100 );
-                    randomNoise = random.nextInt( 15) - 15;
-                    double currentHumidity    = 50 * sinusFactor + (50 * randomNoise/ 100 );
-                    randomNoise = random.nextInt( 15) - 15;
-                    double currentAirPressure = 60 * sinusFactor + (60 * randomNoise/ 100 );
-                    randomNoise = random.nextInt( 15) - 15;
-                    double currentWind        = 35 * sinusFactor + (35 * randomNoise/ 100 );
+                    double randomNoise = random.nextInt(30) - 15;
+                    double currentTemperature = 20 * sinusFactor + (20 * (randomNoise / 100));
+                    randomNoise = random.nextInt(15) - 15;
+                    double currentHumidity = 50 * sinusFactor + (50 * (randomNoise / 100));
+                    randomNoise = random.nextInt(15) - 15;
+                    double currentAirPressure = 60 * sinusFactor + (60 * (randomNoise / 100));
+                    randomNoise = random.nextInt(15) - 15;
+                    double currentWind = 35 * sinusFactor + (35 * (randomNoise / 100));
 
                     TelemetryDataPoint telemetryDataPoint = new TelemetryDataPoint();
                     telemetryDataPoint.temperature = currentTemperature;
@@ -154,11 +153,11 @@ public class SimulatedDevice {
                         lockobj.wait();
                     }
                     //Berechnung der Zeit, die gewartet werden soll, in Sekunden
-                    Long timeout = 60 / waitingTime ;
+                    Long timeout = 60 / waitingTime;
                     Thread.sleep(timeout * 1000);
                 }
             } catch (InterruptedException e) {
-                out.print("Finished.", 1);
+                out.print("Finished.", 0);
                 out.stop();
             }
         }

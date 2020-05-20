@@ -9,9 +9,11 @@ import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.text.SimpleDateFormat;
 import java.time.Duration;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.util.Calendar;
 import java.util.Random;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -140,8 +142,8 @@ public class SimulatedDevice {
                     // Add the telemetry to the message body as JSON.
                     String msgStr = telemetryDataPoint.serialize();
                     Message msg = new Message(msgStr);
-
-                    out.print("Sending message: " + msgStr, 1);
+                    String timeLog = new SimpleDateFormat("yyyy.MM.dd_HH:mm:ss").format(Calendar.getInstance().getTime());
+                    out.print(timeLog + "  " +  "Sending message: " + msgStr, 1);
 
                     Object lockobj = new Object();
 

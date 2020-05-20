@@ -1,34 +1,81 @@
+// Copyright (c) Microsoft. All rights reserved.
+// Licensed under the MIT license. See LICENSE file in the project root for full license information.
+
+// This application uses the Azure IoT Hub device SDK for Java
+// For samples see: https://github.com/Azure/azure-iot-sdk-java/tree/master/device/iot-device-samples
 import com.microsoft.azure.sdk.iot.device.*;
-import com.microsoft.azure.sdk.iot.device.DeviceTwin.*;
 import com.google.gson.Gson;
 
 import java.io.*;
 import java.net.URISyntaxException;
+import java.time.Duration;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.Random;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ExecutorService;
-public class SimulatedDevice {
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
+public class SimulatedDevice {
     // The device connection string to authenticate the device with your IoT hub.
     // Using the Azure CLI:
     // az iot hub device-identity show-connection-string --hub-name {YourIoTHubName} --device-id MyJavaDevice --output table
-    private static String connString = "{Your device connection string here}";
+    private String connString = "{Your device connection string here}";
+    private String deviceID;
+    
 
     // Using the MQTT protocol to connect to IoT Hub
-    private static IotHubClientProtocol protocol = IotHubClientProtocol.MQTT;
-    private static DeviceClient client;
+    private IotHubClientProtocol protocol = IotHubClientProtocol.MQTT;
+    private DeviceClient client;
+    private long waitingTime;
+    private Output out;
 
-    // Define method response codes
-    private static final int METHOD_SUCCESS = 200;
-    private static final int METHOD_NOT_DEFINED = 404;
-    private static final int INVALID_PARAMETER = 400;
+    //Für Ausführung
+    private ExecutorService executor;
 
-    private static int telemetryInterval = 1000;
+    // Constructor zum setzen der Parameter
+    public SimulatedDevice(String connString, String deviceID, long waitingTime, Output out) {
+        this.deviceID = deviceID;
+        this.connString = connString;
+        this.deviceID = deviceID;
+        this.waitingTime = waitingTime;
+        this.out = out;
+    }
+
+
+    public void startSimulation(){
+
+        // Connect to the IoT hub.
+        try {
+            client = new DeviceClient(connString, protocol);
+            client.open();
+            MessageSender sender = new MessageSender();
+            executor = Executors.newFixedThreadPool(1);
+            executor.execute(sender);
+
+        } catch (URISyntaxException | IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+    public void stopSimulation(){
+        executor.shutdownNow();
+        try {
+            client.closeNow();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
 
     // Specify the telemetry to send to your IoT hub.
-    private static class TelemetryDataPoint {
+    private class TelemetryDataPoint {
+        public String deviceID;
         public double temperature;
         public double humidity;
+        public double airPressure;
+        public double wind;
 
         // Serialize object to JSON format.
         public String serialize() {
@@ -37,19 +84,10 @@ public class SimulatedDevice {
         }
     }
 
-    // Print the acknowledgement received from IoT Hub for the method acknowledgement sent.
-    protected static class DirectMethodStatusCallback implements IotHubEventCallback
-    {
-        public void execute(IotHubStatusCode status, Object context)
-        {
-            System.out.println("Direct method # IoT Hub responded to device method acknowledgement with status: " + status.name());
-        }
-    }
-
     // Print the acknowledgement received from IoT Hub for the telemetry message sent.
-    private static class EventCallback implements IotHubEventCallback {
+    private class EventCallback implements IotHubEventCallback {
         public void execute(IotHubStatusCode status, Object context) {
-            System.out.println("IoT Hub responded to message with status: " + status.name());
+            out.print("IoT Hub responded to message with status: " + status.name(), 1);
 
             if (context != null) {
                 synchronized (context) {
@@ -59,47 +97,7 @@ public class SimulatedDevice {
         }
     }
 
-    protected static class DirectMethodCallback implements DeviceMethodCallback
-    {
-        private void setTelemetryInterval(int interval)
-        {
-            System.out.println("Direct method # Setting telemetry interval (seconds): " + interval);
-            telemetryInterval = interval * 1000;
-        }
-
-        @Override
-        public DeviceMethodData call(String methodName, Object methodData, Object context)
-        {
-            DeviceMethodData deviceMethodData;
-            String payload = new String((byte[])methodData);
-            switch (methodName)
-            {
-                case "SetTelemetryInterval" :
-                {
-                    int interval;
-                    try {
-                        int status = METHOD_SUCCESS;
-                        interval = Integer.parseInt(payload);
-                        System.out.println(payload);
-                        setTelemetryInterval(interval);
-                        deviceMethodData = new DeviceMethodData(status, "Executed direct method " + methodName);
-                    } catch (NumberFormatException e) {
-                        int status = INVALID_PARAMETER;
-                        deviceMethodData = new DeviceMethodData(status, "Invalid parameter " + payload);
-                    }
-                    break;
-                }
-                default:
-                {
-                    int status = METHOD_NOT_DEFINED;
-                    deviceMethodData = new DeviceMethodData(status, "Not defined direct method " + methodName);
-                }
-            }
-            return deviceMethodData;
-        }
-    }
-
-    private static class MessageSender implements Runnable {
+    private class MessageSender implements Runnable {
         public void run() {
             try {
                 // Initialize the simulated telemetry.
@@ -108,22 +106,43 @@ public class SimulatedDevice {
                 Random rand = new Random();
 
                 while (true) {
+                    ZoneId z = ZoneId.of( "Europe/Berlin" );
+                    ZonedDateTime now = ZonedDateTime.now( z );
+                    ZonedDateTime todayStart = now.toLocalDate().atStartOfDay( z );
+                    Duration duration = Duration.between( todayStart , now );
+                    double secondsSoFarToday = duration.getSeconds();
+                    // Übersetzung in prozentualer Anteil vom Tag
+                    double dayPercentage = secondsSoFarToday/ (60*60*24);
+                    // für Sinus-Funktion mal PI nehmen (Annahme = PI = 24 Stunden)
+                    double dayPercentagePi = Math.PI * dayPercentage;
+                    double sinusFactor = Math.sin(dayPercentagePi);
+                    System.out.println(sinusFactor);
+                    //setup random noise
+                    Random random = new Random();
+
                     // Simulate telemetry.
-                    double currentTemperature = minTemperature + rand.nextDouble() * 15;
-                    double currentHumidity = minHumidity + rand.nextDouble() * 20;
+                    int randomNoise = random.nextInt( 30) - 15;
+                    double currentTemperature = 20 * sinusFactor + (20 *  randomNoise/ 100 );
+                    randomNoise = random.nextInt( 15) - 15;
+                    double currentHumidity    = 50 * sinusFactor + (50 * randomNoise/ 100 );
+                    randomNoise = random.nextInt( 15) - 15;
+                    double currentAirPressure = 60 * sinusFactor + (60 * randomNoise/ 100 );
+                    randomNoise = random.nextInt( 15) - 15;
+                    double currentWind        = 35 * sinusFactor + (35 * randomNoise/ 100 );
+
                     TelemetryDataPoint telemetryDataPoint = new TelemetryDataPoint();
                     telemetryDataPoint.temperature = currentTemperature;
                     telemetryDataPoint.humidity = currentHumidity;
+                    telemetryDataPoint.airPressure = currentAirPressure;
+                    telemetryDataPoint.wind = currentWind;
+
+                    telemetryDataPoint.deviceID = deviceID;
 
                     // Add the telemetry to the message body as JSON.
                     String msgStr = telemetryDataPoint.serialize();
                     Message msg = new Message(msgStr);
 
-                    // Add a custom application property to the message.
-                    // An IoT hub can filter on these properties without access to the message body.
-                    msg.setProperty("temperatureAlert", (currentTemperature > 30) ? "true" : "false");
-
-                    System.out.println("Sending message: " + msgStr);
+                    out.print("Sending message: " + msgStr, 1);
 
                     Object lockobj = new Object();
 
@@ -134,32 +153,16 @@ public class SimulatedDevice {
                     synchronized (lockobj) {
                         lockobj.wait();
                     }
-                    Thread.sleep(telemetryInterval);
+                    //Berechnung der Zeit, die gewartet werden soll, in Sekunden
+                    Long timeout = 60 / waitingTime ;
+                    Thread.sleep(timeout * 1000);
                 }
             } catch (InterruptedException e) {
-                System.out.println("Finished.");
+                out.print("Finished.", 1);
+                out.stop();
             }
         }
     }
 
-    public static void main(String[] args) throws IOException, URISyntaxException {
 
-        // Connect to the IoT hub.
-        client = new DeviceClient(connString, protocol);
-        client.open();
-
-        // Register to receive direct method calls.
-        client.subscribeToDeviceMethod(new DirectMethodCallback(), null, new DirectMethodStatusCallback(), null);
-
-        // Create new thread and start sending messages
-        MessageSender sender = new MessageSender();
-        ExecutorService executor = Executors.newFixedThreadPool(1);
-        executor.execute(sender);
-
-        // Stop the application.
-        System.out.println("Press ENTER to exit.");
-        System.in.read();
-        executor.shutdownNow();
-        client.closeNow();
-    }
 }

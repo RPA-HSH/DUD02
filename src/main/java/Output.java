@@ -1,7 +1,6 @@
 import java.io.*;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.concurrent.ExecutorService;
 
 public class Output {
     private PrintStream ps;
@@ -9,10 +8,13 @@ public class Output {
     private String dir;
 
     public Output(PrintStream ps, String dir) {
+        //Instanzattribute setzen
         this.dir = dir;
         this.ps = ps;
+        //Timestamp für Erstellung der Log-Datei generieren
         String timeLog = new SimpleDateFormat("yyyyMMdd_HHmmss").format(Calendar.getInstance().getTime());
         try {
+            //Objekt für Ausgabe in Textfile erstellen
             writer = new FileWriter(dir + "RPI_LOG_" + timeLog + ".txt");
 
         } catch (IOException e) {
@@ -20,11 +22,12 @@ public class Output {
         }
     }
 
-    public void print(String text, Integer output) {
+    public void print(String text, Boolean onlyInGUI) {
         try {
+            //Ausgabe des Texts in GUI
             ps.println(text);
-            //create a temporary file
-            if (output > 0) {
+            //Ausgabe in Log-File, falls explizit gefordert
+            if (onlyInGUI == false) {
                 writer.write(text);
                 writer.write(System.getProperty("line.separator"));
             }
@@ -35,6 +38,7 @@ public class Output {
 
     public void stop() {
         try {
+            //Ausgabe in Log-Datei schreiben und Filezugriff beenden
             writer.close();
         } catch (IOException e) {
             e.printStackTrace();

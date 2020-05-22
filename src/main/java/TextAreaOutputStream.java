@@ -3,6 +3,11 @@ import java.io.*;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
+//##########################################################################################
+//### Klasse für Output Stream (z.B. für Ausgabe von Texten in GUI)
+//### Implementierung übernommen aus:
+//### https://stackoverflow.com/questions/12945537/how-to-set-output-stream-to-textarea
+//##########################################################################################
 
 public class TextAreaOutputStream
         extends OutputStream {

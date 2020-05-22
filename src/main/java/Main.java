@@ -17,10 +17,14 @@ public class Main {
         // GUI erstellen
         JFrame frame = new JFrame();
         JPanel panel = new JPanel();
-        JTextArea ta = new JTextArea(40, 30);
+        JPanel panel2 = new JPanel();
+        JTextArea ta = new JTextArea(80, 70);
 
         frame.add(panel);
-        frame.add(new JLabel(" Output"));
+        panel.setBorder(BorderFactory.createEmptyBorder(30,30,10,30));
+        panel2.setBorder(BorderFactory.createEmptyBorder(30,30,20,30));
+        panel.setLayout(new GridLayout(9,1));
+        panel2.setLayout(new FlowLayout());
         txtConnectionString = new JTextField("HostName=DUD02-IoTHUB.azure-devices.net;DeviceId=DUD02-IoTHUB;SharedAccessKey=5wfEP6MZJFmq0NDIorNuh9RQZHsTqoUkov9lC6bFohM=", 40);
         txtDeviceID = new JTextField("device", 40);
         txtFrequence = new JTextField("10", 40);
@@ -35,13 +39,16 @@ public class Main {
         panel.add(txtFrequence);
         panel.add(new Label("Log Directory"));
         panel.add(txtLogDir);
-        panel.add(buttonStart);
-        panel.add(buttonStop);
-        panel.add(new JScrollPane(ta));
-
+        panel2.add(buttonStart);
+        panel2.add(buttonStop);
+        panel2.add(new JScrollPane(ta));
+        panel2.add(new Label(""));
+        frame.setLayout(new GridLayout(2, 1));
         frame.add(panel);
+        frame.add(panel2);
         frame.setVisible(true);
-        frame.setSize(500, 600);
+        frame.setSize(900, 600);
+
 
         //Ausgabe in GUI lenken
         TextAreaOutputStream taos = new TextAreaOutputStream(ta, 60);

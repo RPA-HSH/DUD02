@@ -1,8 +1,8 @@
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.*;
-import java.io.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.io.PrintStream;
 
 
 public class Main {
@@ -19,7 +19,7 @@ public class Main {
         JPanel panel = new JPanel();
         JPanel panel2 = new JPanel();
         JPanel panel3 = new JPanel();
-        JTextArea ta = new JTextArea(80, 70);
+        JTextArea ta = new JTextArea(9, 70);
 
         frame.add(panel);
         panel.setBorder(BorderFactory.createEmptyBorder(30,30,10,30));
@@ -28,7 +28,7 @@ public class Main {
         panel.setLayout(new GridLayout(9,1));
         panel2.setLayout(new FlowLayout());
         panel3.setLayout(new FlowLayout());
-        txtConnectionString = new JTextField("HostName=DUD02-IoTHUB.azure-devices.net;DeviceId=DUD02-IoTHUB;SharedAccessKey=5wfEP6MZJFmq0NDIorNuh9RQZHsTqoUkov9lC6bFohM=", 40);
+        txtConnectionString = new JTextField("", 40);
         txtDeviceID = new JTextField("device", 40);
         txtFrequence = new JTextField("10", 40);
         txtLogDir = new JTextField("C:/temp/", 40);
@@ -42,7 +42,9 @@ public class Main {
         panel.add(txtFrequence);
         panel.add(new Label("Log Directory"));
         panel.add(txtLogDir);
-        panel2.add(new JScrollPane(ta));
+        JScrollPane scrollPane = new JScrollPane(ta);
+        scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_ALWAYS);
+        panel2.add(scrollPane);
         panel3.add(buttonStart);
         panel3.add(buttonStop);
         frame.setLayout(new GridLayout(3, 1));

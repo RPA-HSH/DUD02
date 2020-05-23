@@ -4,10 +4,10 @@
 // This application uses the Azure IoT Hub device SDK for Java
 // For samples see: https://github.com/Azure/azure-iot-sdk-java/tree/master/device/iot-device-samples
 
-import com.microsoft.azure.sdk.iot.device.*;
 import com.google.gson.Gson;
+import com.microsoft.azure.sdk.iot.device.*;
 
-import java.io.*;
+import java.io.IOException;
 import java.net.URISyntaxException;
 import java.text.SimpleDateFormat;
 import java.time.Duration;
